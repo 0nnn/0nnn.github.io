@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"blog.0nnn.xyz","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="网盘方便了人们的办公和娱乐，成了我们日常必不可少的，现在网络上的很多网盘，诸如百度网盘、蓝奏网盘等。不过，这些网盘都有这样那样的限制，也有着一些必须的费用，有的时候，拥有一个自己的私人云盘会方便很多，本篇博客讲述利用termux在闲置的旧手机上搭建私人云盘">
+<meta property="og:type" content="article">
+<meta property="og:title" content="使用termux搭建私人云盘">
+<meta property="og:url" content="https://blog.0nnn.xyz/2021/07/22/%E4%BD%BF%E7%94%A8termux%E6%90%AD%E5%BB%BA%E7%A7%81%E4%BA%BA%E4%BA%91%E7%9B%98/index.html">
+<meta property="og:site_name" content="0NNN">
+<meta property="og:description" content="网盘方便了人们的办公和娱乐，成了我们日常必不可少的，现在网络上的很多网盘，诸如百度网盘、蓝奏网盘等。不过，这些网盘都有这样那样的限制，也有着一些必须的费用，有的时候，拥有一个自己的私人云盘会方便很多，本篇博客讲述利用termux在闲置的旧手机上搭建私人云盘">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2021/08/18/eRXJIgGisnf9EF7.jpg">
+<meta property="og:image" content="https://i.loli.net/2021/08/18/lpUruOnixyItqhm.jpg">
+<meta property="og:image" content="https://i.loli.net/2021/09/05/REuMxkAUTcqXirB.jpg">
+<meta property="og:image" content="https://i.loli.net/2021/09/05/AaGy9KWH7vi3SpB.jpg">
+<meta property="og:image" content="https://i.loli.net/2021/09/05/K7cklfvb6SDZa4j.jpg">
+<meta property="og:image" content="https://i.loli.net/2021/09/05/iyx9kMdw2F3Jtsu.jpg">
+<meta property="og:image" content="https://i.loli.net/2021/09/05/V45fc1Hm7iLrAGN.jpg">
+<meta property="og:image" content="https://i.loli.net/2021/09/05/yMwuxN5fDsPE6RL.jpg">
+<meta property="article:published_time" content="2021-07-22T10:35:28.000Z">
+<meta property="article:modified_time" content="2021-09-09T12:21:09.495Z">
+<meta property="article:author" content="0nnn">
+<meta property="article:tag" content="termux">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2021/08/18/eRXJIgGisnf9EF7.jpg">
+
+<link rel="canonical" href="https://blog.0nnn.xyz/2021/07/22/%E4%BD%BF%E7%94%A8termux%E6%90%AD%E5%BB%BA%E7%A7%81%E4%BA%BA%E4%BA%91%E7%9B%98/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'zh-CN'
+  };
+</script>
+
+  <title>使用termux搭建私人云盘 | 0NNN</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="切换导航栏">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">0NNN</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">你也可以叫我Hobbes</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>首页</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>标签</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>归档</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="https://blog.0nnn.xyz/2021/07/22/%E4%BD%BF%E7%94%A8termux%E6%90%AD%E5%BB%BA%E7%A7%81%E4%BA%BA%E4%BA%91%E7%9B%98/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="0nnn">
+      <meta itemprop="description" content="0nnn">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="0NNN">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          使用termux搭建私人云盘
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              <time title="创建时间：2021-07-22 18:35:28" itemprop="dateCreated datePublished" datetime="2021-07-22T18:35:28+08:00">2021-07-22</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2021-09-09 20:21:09" itemprop="dateModified" datetime="2021-09-09T20:21:09+08:00">2021-09-09</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>网盘方便了人们的办公和娱乐，成了我们日常必不可少的，现在网络上的很多网盘，诸如百度网盘、蓝奏网盘等。不过，这些网盘都有这样那样的限制，也有着一些必须的费用，有的时候，拥有一个自己的私人云盘会方便很多，本篇博客讲述利用termux在闲置的旧手机上搭建私人云盘</p>
+<span id="more"></span>
+<h1 id="配置需求"><a href="#配置需求" class="headerlink" title="配置需求"></a>配置需求</h1><p>一台Android 7.0及以上的手机 和一个支持ipv6的网络环境。（可以点击<a target="_blank" rel="noopener" href="http://test-ipv6.com/">http://test-ipv6.com</a>测试一下）</p>
+<h1 id="初识termux"><a href="#初识termux" class="headerlink" title="初识termux"></a>初识termux</h1><p>  termux是在Android上开源的一个终端模拟器应用，比较完整地还原了Linux环境。在root越来越难的今天，termux支持使用proot来代替root，并且可以用proot做容器安装完整的linux系统。官方提供了pkg的软件管理包，日后可以安装Python nginx mysql等应用。</p>
+<h1 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h1><h2 id="换源"><a href="#换源" class="headerlink" title="换源"></a>换源</h2><p>  termux的官方软件仓库在中国访问或下载速度很慢，所以换一个靠谱的国内镜像源是一件每个linux用户都会做的事情<br>  早期的termux只能通过修改配置文件来换源，不过现在有了官方的图像界面实现半自动化换源。<br><code>termux-change-repo</code><br><img src="https://i.loli.net/2021/08/18/eRXJIgGisnf9EF7.jpg" ><br>然后使用空格键选择所以后回车，<br><img src="https://i.loli.net/2021/08/18/lpUruOnixyItqhm.jpg" ><br>来到仓库选择界面选择tuna的镜像后回车，termux就会帮你自动替换成tuna的镜像源<br>  <del>需要注意的是，切换为镜像源后pkg search功能似乎无法正常使用（会列出所有的包）</del> </p>
+<h2 id="安装一些必须的软件"><a href="#安装一些必须的软件" class="headerlink" title="安装一些必须的软件"></a>安装一些必须的软件</h2><p>  如果你只是想要搭建一个私人网盘的话 那么<br>  <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pkg install wget php-fpm nginx curl git mariadb  -y</span><br></pre></td></tr></table></figure><br>  如果你想要深入了解termux的话，这里推荐访问<a target="_blank" rel="noopener" href="https://www.sqlsec.com/2018/05/termux.html">国光老师的博客</a> </p>
+<h1 id="正式上路"><a href="#正式上路" class="headerlink" title="正式上路"></a>正式上路</h1><h2 id="下载kod"><a href="#下载kod" class="headerlink" title="下载kod"></a>下载kod</h2><p>创建一个文件夹 <code>mkdir kod &amp;&amp; cd kod</code> ，<br><img src="https://i.loli.net/2021/09/05/REuMxkAUTcqXirB.jpg" ><br>打开<a target="_blank" rel="noopener" href="https://kodcloud.com/download/">https://kodcloud.com/download/</a>，复制其中的Linux命令行安装中的指令，直接执行即可。</p>
+<h2 id="配置nginx"><a href="#配置nginx" class="headerlink" title="配置nginx"></a>配置nginx</h2><p>解压完成之后 候我们要将nginx的根目录改为kod所在的目录，使用<code>vim $PREFIX/etc/nginx/nginx.conf</code>修改nginx的配置文件<br>这里令提一点，vim的使用有些复杂，如果你不会使用的话，建议先经过一定的学习<a target="_blank" rel="noopener" href="https://m.runoob.com/linux/linux-vim.html">https://m.runoob.com/linux/linux-vim.html</a>后再继续观看本教程<br>言归正传，我们找到root，将后面的地址改为<code>~/kod</code><br>然后找到index，在后面添加上<code> index.php</code>,<br>找到带着注释的<code>location ~\.php$&#123;</code>在上一行重开一行，添加  </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">location ~ \.php$ &#123;</span><br><span class="line">     root           html;</span><br><span class="line">     fastcgi_pass   127.0.0.1:9000;</span><br><span class="line">     fastcgi_index  index.php;</span><br><span class="line">     fastcgi_param  SCRIPT_FILENAME  ~/kod$fastcgi_script_name;</span><br><span class="line">      include        fastcgi_params;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>找到listen<br>在后面开一行添加  </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">listen [::]:8080</span><br></pre></td></tr></table></figure>
+<p>然后保存退出</p>
+<h2 id="解析php"><a href="#解析php" class="headerlink" title="解析php"></a>解析php</h2><p>kod调用最多的是php，所以nginx能够解析php是非常重要的，不过nginx本身不能解析php,所以要放到后端的php-fpm来处理<br>使用<code>vim $PREFIX/etc/php-fpm.d/www.conf</code>修改php-fpm的配置  </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">listen = /data/data/com.termux/files/usr/var/run/php-fpm.sock</span><br></pre></td></tr></table></figure>
+
+<p>改为<br><code>listen = 127.0.0.1:9000</code><br>保存退出<br>这个时候，你已经完成了一半了，然后输入<code>php-fpm &amp;&amp; nginx</code>运行nginx, 随后在浏览器中打开<a target="_blank" rel="noopener" href="http://localhost:8080/">http://localhost:8080</a>,如果没有nginx或php报错的话，服务器算是配置完成了，接下来就需要为kod搭建数据库了</p>
+<h2 id="搭建mysql"><a href="#搭建mysql" class="headerlink" title="搭建mysql"></a>搭建mysql</h2><p>首先输入<code>nohup mysqld &amp;</code>启动mysql ,并将其挂到后台，,输入 <code>whoami</code>获取当前用户，然后输入<code>mysql -u 用户名</code>登入mysql 然后输入  </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">use mysql;</span><br><span class="line">set password for &#x27;root&#x27;@&#x27;localhost&#x27; = password(&#x27;password&#x27;);  </span><br></pre></td></tr></table></figure>
+<p>当然，你也可以将password替换为其他密码<br>设置你的root用户密码，使用ctrl + d退出，日后可以用<code>mysql -u root -ppassword</code>登录  </p>
+<h1 id="配置-kod"><a href="#配置-kod" class="headerlink" title="配置 kod"></a>配置 kod</h1><p>一切准备就绪，现在用ctrl+d退出termux,重新打开，输入  </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">nohup mysqld &amp; </span><br><span class="line">php-fpm</span><br><span class="line">nginx</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<p>然后在浏览器中打开127.0.0.1:8080进入安装引导<br><img src="https://i.loli.net/2021/09/05/AaGy9KWH7vi3SpB.jpg" ><br>点击下一步<br><img src="https://i.loli.net/2021/09/05/K7cklfvb6SDZa4j.jpg" ><br>数据库类型选择mysql,密码填写password或者你自定义的密码<br><img src="https://i.loli.net/2021/09/05/iyx9kMdw2F3Jtsu.jpg" ><br>填写用于登录的账号和密码，这是超级管理员的账号和密码<br><img src="https://i.loli.net/2021/09/05/V45fc1Hm7iLrAGN.jpg" ><br>输入刚才的账号密码访问<br>登陆后是这个样子<br><img src="https://i.loli.net/2021/09/05/yMwuxN5fDsPE6RL.jpg" ></p>
+<h1 id="测试访问"><a href="#测试访问" class="headerlink" title="测试访问"></a>测试访问</h1><p>  这个时候，kod的基本工作已经完成了，之后通过<a target="_blank" rel="noopener" href="https://api-ipv6.ip.sb/ip">https://api-ipv6.ip.sb/ip</a>获取你的ipv6地址，接着用<a href="http://[你获取的地址]:8080">http://[你获取的地址]:8080</a>访问，如果实在不放心，也可以将它发给你的好基/姬友帮忙测试一下  </p>
+<h1 id="完善工作"><a href="#完善工作" class="headerlink" title="完善工作"></a>完善工作</h1><h2 id="创建公共目录的软连接"><a href="#创建公共目录的软连接" class="headerlink" title="创建公共目录的软连接"></a>创建公共目录的软连接</h2><p>kod必须安装在termux的私有目录，这就导致一些文件的访问等非常不方便，不过我们仍然可以通过创建软连接的方式将目录重新定向到公有目录<br>首先输入<code>termux-setup-storage</code>获取公有目录访问权限，然后进入kod的目录，这时候  </p>
+<h4 id="1-访问整个sdcard目录"><a href="#1-访问整个sdcard目录" class="headerlink" title="1.访问整个sdcard目录"></a>1.访问整个sdcard目录</h4><p>进入files目录，使用<code>ln -s /sdcard myfiles</code>创建软连接  </p>
+<h4 id="2-访问部分文件"><a href="#2-访问部分文件" class="headerlink" title="2.访问部分文件"></a>2.访问部分文件</h4><p>这里以创建myfiles举例  </p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">cd files</span><br><span class="line">mkdir /sdcard/myfiles</span><br><span class="line">ln -s /sdcard/myfiles myfiles</span><br></pre></td></tr></table></figure>
+<hr>
+<p>全部完成之后，登录kod，打开网络管理中本地磁盘/myfiles 就可以看到公有目录了</p>
+<h2 id="绑定域名"><a href="#绑定域名" class="headerlink" title="绑定域名"></a>绑定域名</h2><p>众所周知，ipv6地址是128位的，睡愿意去访问一个又臭又长的纯ipv6地址呢?所有，有一个域名是会方便很多。</p>
+<h4 id="注册一个域名"><a href="#注册一个域名" class="headerlink" title="注册一个域名"></a>注册一个域名</h4><p>没有域名的话我们可以去<a target="_blank" rel="noopener" href="https://www.freenom.com/">https://www.freenom.com</a>去注册一个免费的，不过只能注册一些不常见的后缀。相比之下，我更推荐去购买一个top或xyz的域名。这里就不多赘述  </p>
+<h4 id="移交至Cloudflare管理"><a href="#移交至Cloudflare管理" class="headerlink" title="移交至Cloudflare管理"></a>移交至Cloudflare管理</h4><p>Cloudflare是世界上最大的dns服务商，也为网站提供了cdn服务，需要注意的是，如果你是在freenom中注册的域名的话，还是尽量移交至腾讯云管理这里同样不多赘述  </p>
+<h4 id="配置ddnsv6"><a href="#配置ddnsv6" class="headerlink" title="配置ddnsv6"></a>配置ddnsv6</h4><p>我们的dns地址不是永远不变的，网络的变更和租约的到期都会导致ipv6地址的变更，所以我们要配置ddnsv6获取动态域名解析  </p>
+<h6 id="1-安装ubuntu"><a href="#1-安装ubuntu" class="headerlink" title="1.安装ubuntu"></a>1.安装ubuntu</h6><p>配置ddnsv6最简单的方法就是安装ddns-go,但ddns-go不可以直接安装在termux中，所以要先安装一个ubuntu系统  </p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">pkg update -y </span><br><span class="line">pkg install curl proot tar -y </span><br><span class="line">curl https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Installer/Ubuntu20/ubuntu20.sh | bash</span><br></pre></td></tr></table></figure>
+<p>在合适的网络环境下，上面的一串指令会帮助我们自动安装Andronix提供的ubuntu系统，回到主目录，输入</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">bash start-ubuntu20.sh</span><br></pre></td></tr></table></figure>
+<p>就可以进入ubuntu系统<del>(如果你乐意的话不妨把之前的一些东西全部转移到ubuntu上)</del>，退出的话使用exit命令即可<br>在termux中，输入<code>vim start-ubuntu20.sh</code>修改启动文件。找到sdcard一行，删掉前面的#号</p>
+<h6 id="2-安装ddns-go"><a href="#2-安装ddns-go" class="headerlink" title="2.安装ddns-go"></a>2.安装ddns-go</h6><p>我们打开ddns-go的<a target="_blank" rel="noopener" href="https://github.com/jeessy2/ddns-go/releases">github</a>，点击Assets，选择arm64的Linux版本并下载解压，随后进入ubuntu系统，将解压后的ddns-go文件复制到bin文件夹并使用<code>chmod +x ddns-go</code>赋予之下权，之后输入<code>./ddns-go</code>打开  </p>
+<h6 id="3-配置ddns-go"><a href="#3-配置ddns-go" class="headerlink" title="3.配置ddns-go"></a>3.配置ddns-go</h6><p>打开ddns-go后，我们在浏览器中打开<a target="_blank" rel="noopener" href="http://127.0.0.1:9876/">http://127.0.0.1:9876</a>来配置ddns-go,配置页是默认中午的，且有教程，这里不多赘述。配置好后点击save保存，之后回到termux,从左上角向右话动，点击new session新建一个窗口，在新建窗口中打开服务器</p>
+<h6 id="4-ipv4访问"><a href="#4-ipv4访问" class="headerlink" title="4.ipv4访问"></a>4.ipv4访问</h6><p>我们的服务器是在ipv6上搭建的，所以只有支持ipv6的设备才能使用，但由于ipv6的建设并没有ipv4完善，所以有时会用到ipv4去访问<br>打开Cloudflare,在dns界面新建一个三级域名，选择已代理(默认就是)，这样会让Cloudflare去反向代理你的服务器，会牺牲一定的访问速度(下载速度感知不大,貌似付费域名域名会快很多)，换取ipv4/ipv6的双缆访问<br>不过，由于cdn你会和很多网站公用一个ip地址，ip地址被封禁也是有可能的。  </p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/termux/" rel="tag"># termux</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2021/07/09/hello-world/" rel="prev" title="Hello World">
+      <i class="fa fa-chevron-left"></i> Hello World
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2021/09/05/%E7%99%BD%E5%AB%96%E4%B8%80%E5%8F%B0%E6%9C%8D%E5%8A%A1%E5%99%A8/" rel="next" title="白嫖一台永久免费服务器">
+      白嫖一台永久免费服务器 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E9%9C%80%E6%B1%82"><span class="nav-number">1.</span> <span class="nav-text">配置需求</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%9D%E8%AF%86termux"><span class="nav-number">2.</span> <span class="nav-text">初识termux</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%87%86%E5%A4%87%E5%B7%A5%E4%BD%9C"><span class="nav-number">3.</span> <span class="nav-text">准备工作</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8D%A2%E6%BA%90"><span class="nav-number">3.1.</span> <span class="nav-text">换源</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E4%B8%80%E4%BA%9B%E5%BF%85%E9%A1%BB%E7%9A%84%E8%BD%AF%E4%BB%B6"><span class="nav-number">3.2.</span> <span class="nav-text">安装一些必须的软件</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%AD%A3%E5%BC%8F%E4%B8%8A%E8%B7%AF"><span class="nav-number">4.</span> <span class="nav-text">正式上路</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8B%E8%BD%BDkod"><span class="nav-number">4.1.</span> <span class="nav-text">下载kod</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AEnginx"><span class="nav-number">4.2.</span> <span class="nav-text">配置nginx</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A7%A3%E6%9E%90php"><span class="nav-number">4.3.</span> <span class="nav-text">解析php</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%90%AD%E5%BB%BAmysql"><span class="nav-number">4.4.</span> <span class="nav-text">搭建mysql</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE-kod"><span class="nav-number">5.</span> <span class="nav-text">配置 kod</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95%E8%AE%BF%E9%97%AE"><span class="nav-number">6.</span> <span class="nav-text">测试访问</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%AE%8C%E5%96%84%E5%B7%A5%E4%BD%9C"><span class="nav-number">7.</span> <span class="nav-text">完善工作</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E5%85%AC%E5%85%B1%E7%9B%AE%E5%BD%95%E7%9A%84%E8%BD%AF%E8%BF%9E%E6%8E%A5"><span class="nav-number">7.1.</span> <span class="nav-text">创建公共目录的软连接</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E8%AE%BF%E9%97%AE%E6%95%B4%E4%B8%AAsdcard%E7%9B%AE%E5%BD%95"><span class="nav-number">7.1.0.1.</span> <span class="nav-text">1.访问整个sdcard目录</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E8%AE%BF%E9%97%AE%E9%83%A8%E5%88%86%E6%96%87%E4%BB%B6"><span class="nav-number">7.1.0.2.</span> <span class="nav-text">2.访问部分文件</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%91%E5%AE%9A%E5%9F%9F%E5%90%8D"><span class="nav-number">7.2.</span> <span class="nav-text">绑定域名</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B3%A8%E5%86%8C%E4%B8%80%E4%B8%AA%E5%9F%9F%E5%90%8D"><span class="nav-number">7.2.0.1.</span> <span class="nav-text">注册一个域名</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%A7%BB%E4%BA%A4%E8%87%B3Cloudflare%E7%AE%A1%E7%90%86"><span class="nav-number">7.2.0.2.</span> <span class="nav-text">移交至Cloudflare管理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E9%85%8D%E7%BD%AEddnsv6"><span class="nav-number">7.2.0.3.</span> <span class="nav-text">配置ddnsv6</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#1-%E5%AE%89%E8%A3%85ubuntu"><span class="nav-number">7.2.0.3.0.1.</span> <span class="nav-text">1.安装ubuntu</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#2-%E5%AE%89%E8%A3%85ddns-go"><span class="nav-number">7.2.0.3.0.2.</span> <span class="nav-text">2.安装ddns-go</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#3-%E9%85%8D%E7%BD%AEddns-go"><span class="nav-number">7.2.0.3.0.3.</span> <span class="nav-text">3.配置ddns-go</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#4-ipv4%E8%AE%BF%E9%97%AE"><span class="nav-number">7.2.0.3.0.4.</span> <span class="nav-text">4.ipv4访问</span></a></li></ol></li></ol></li></ol></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">0nnn</p>
+  <div class="site-description" itemprop="description">0nnn</div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">5</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">标签</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">0nnn</span>
+</div>
+  <div class="powered-by">
+<!--由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a> 强力驱动
+-->
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+    <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+ 
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+ 
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+ 
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+ 
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('复制').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+ 
+        if(result)$(this).text('复制成功')
+        else $(this).text('复制失败')
+ 
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('复制')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+</body>
+</html>
