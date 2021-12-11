@@ -177,6 +177,19 @@
 </header>
 
     
+<script src="/libs/cryptojs/crypto-js.min.js"></script>
+<script>
+    (function() {
+        let pwd = '';
+        if (pwd && pwd.length > 0) {
+            if (pwd !== CryptoJS.SHA256(prompt('请输入访问本文章的密码')).toString(CryptoJS.enc.Hex)) {
+                alert('密码错误，将返回主页！');
+                location.href = '/';
+            }
+        }
+    })();
+</script>
+
 
 
 
@@ -349,7 +362,7 @@
 <span id="more"></span>  
 <p>首先说一点，中国大陆无法使用Gmail app，如果登录上的话ios手机可以接收消息推送，但是查看详细和主动发送邮件都不行。(得益于苹果的统一推送服务)。安卓版本不挂梯子是完全无法使用的。<br>相比于此，中国大陆仍有很好的解决方案  </p>
 <h1 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h1><h3 id="1-只是用Gmail接收邮件，不主动发送邮件。"><a href="#1-只是用Gmail接收邮件，不主动发送邮件。" class="headerlink" title="1.只是用Gmail接收邮件，不主动发送邮件。"></a>1.只是用Gmail接收邮件，不主动发送邮件。</h3><p>这类情况再国外游戏玩家中比较常见，只是用Gmail接收个验证码注册个账号啥的，可以选择使用转发服务。<br>转发的原理其实就是当Gmail收到邮件后，邮件会被Gmail转发一封邮件到你绑定的账号上，万幸的是中国没有对Gmail完全封锁，我们在国内仍能接收到来自Gmail的邮件。</p>
-<h5 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h5><p>首先，打开<a target="_blank" rel="noopener" href="https://mail.google.com/">Gmail</a> ~~~(这不废话吗)~~~ ，登录好账号之后，(移动版可能需要切换为桌面版)在设置中找到”转发和POP/IMAP”，选择转发一栏，在其中找到”添加转发地址”，添加你常用的国内邮箱就好。</p>
+<h5 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h5><p>首先，打开<a target="_blank" rel="noopener" href="https://mail.google.com/">Gmail</a> <del>(这不废话吗)</del> ，登录好账号之后，(移动版可能需要切换为桌面版)在设置中找到”转发和POP/IMAP”，选择转发一栏，在其中找到”添加转发地址”，添加你常用的国内邮箱就好。</p>
 <h3 id="2-使用Gmail有发送的要求，但不涉及商业。"><a href="#2-使用Gmail有发送的要求，但不涉及商业。" class="headerlink" title="2.使用Gmail有发送的要求，但不涉及商业。"></a>2.使用Gmail有发送的要求，但不涉及商业。</h3><h5 id="QQ邮箱"><a href="#QQ邮箱" class="headerlink" title="QQ邮箱"></a>QQ邮箱</h5><p>qq邮箱算是腾讯旗下十分良心的产品了，不仅完全免费使用，而且广告不多，甚至还罕见的接入了mipush，可谓是良心软件。<br>打开qq邮箱后直接选择gmail便可以直接跳转到google账号登录页面，全过程在中国大陆内即可完成。目测应该是腾讯搭建了一个国际联网的反向代理(因为google显示的登录地址便是国内的)。  </p>
 <hr>
 <h5 id="小米邮箱"><a href="#小米邮箱" class="headerlink" title="小米邮箱"></a>小米邮箱</h5><p>小米邮箱就是小米自带的邮箱，由于google的限制，登录第三方邮箱客户端需要获得google的网页授权，所以传统的账号密码登录无法使用，在账号上输入以”@gmail.com”结尾的邮箱也会跳转到google的授权页面。<br>与qq邮箱不同的是，小米邮箱没有搭建代理，所以登录界面需要自己翻，之后便可以正常的使用gmail。<br>需要注意的是，小米邮箱中gmail的体验其实很差，有推送但完全不起作用，服务器也十有八九连不上，其实是不太油好的，但至少是裸网访问，个人信息不用过一遍其他公司的服务器。  </p>
@@ -470,29 +483,28 @@
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="far fa-dot-circle"></i>&nbsp;本篇
-            </div>
+                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2021/11/10/%E5%85%B3%E4%BA%8E%E5%9B%BD%E5%86%85%E4%BD%BF%E7%94%A8Gmail%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B/">
+                <a href="/2021/12/11/%E4%B8%80%E6%9C%88%E4%BA%94%E5%85%83%E7%9A%84vps%E5%8D%B4%E4%B8%8D%E4%BC%9A%E8%B4%AD%E4%B9%B0-hostvds%E8%AF%A6%E7%BB%86%E6%95%99%E7%A8%8B/">
                     <div class="card-image">
                         
-                        <img src="https://cdn.jsdelivr.net/gh/0nnn/myimg@master/Gmail-logo-big.jpg" class="responsive-img" alt="国内Gmail的的情况怎样">
+                        <img src="https://cdn.jsdelivr.net/gh/0nnn/myimg@master/IMG_20211211_212349.jpg" class="responsive-img" alt="一月五元的vps却不会购买?hostvds详细教程">
                         
-                        <span class="card-title">国内Gmail的的情况怎样</span>
+                        <span class="card-title">一月五元的vps却不会购买?hostvds详细教程</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
                     <div class="summary block-with-text">
                         
-                            Gmail是Google推出的一款免费的电子邮箱服务，与Google账号深度绑定，每个Google都会附带一个Gmail，是目前世界上最受欢迎的邮箱服务。自从Google退出中国以来，我本以为Gmail在大陆的使用不会太多，没想到在国内仍有
+                            
                         
                     </div>
                     <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2021-11-10
-                            </span>
+                        <span class="publish-date">
+                            <i class="far fa-clock fa-fw icon-date"></i>2021-12-11
+                        </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-user fa-fw"></i>
@@ -501,16 +513,19 @@
                         </span>
                     </div>
                 </div>
-
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/%E9%82%AE%E7%AE%B1/">
-                        <span class="chip bg-color">邮箱</span>
+                    <a href="/tags/vps/">
+                        <span class="chip bg-color">vps</span>
                     </a>
                     
-                    <a href="/tags/Gmail/">
-                        <span class="chip bg-color">Gmail</span>
+                    <a href="/tags/%E6%95%99%E7%A8%8B/">
+                        <span class="chip bg-color">教程</span>
+                    </a>
+                    
+                    <a href="/tags/%E6%9C%8D%E5%8A%A1%E5%99%A8/">
+                        <span class="chip bg-color">服务器</span>
                     </a>
                     
                 </div>
@@ -694,60 +709,6 @@
 
     <footer class="page-footer bg-color">
     
-        <link rel="stylesheet" href="/libs/aplayer/APlayer.min.css">
-<style>
-    .aplayer .aplayer-lrc p {
-        
-        display: none;
-        
-        font-size: 12px;
-        font-weight: 700;
-        line-height: 16px !important;
-    }
-
-    .aplayer .aplayer-lrc p.aplayer-lrc-current {
-        
-        display: none;
-        
-        font-size: 15px;
-        color: #42b983;
-    }
-
-    
-    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body {
-        left: -66px !important;
-    }
-
-    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body:hover {
-        left: 0px !important;
-    }
-
-    
-</style>
-<div class="">
-    
-    <div class="row">
-        <meting-js class="col l8 offset-l2 m10 offset-m1 s12"
-                   server="netease"
-                   type="playlist"
-                   id="503838841"
-                   fixed='true'
-                   autoplay='false'
-                   theme='#42b983'
-                   loop='all'
-                   order='random'
-                   preload='auto'
-                   volume='0.7'
-                   list-folded='true'
-        >
-        </meting-js>
-    </div>
-</div>
-
-<script src="/libs/aplayer/APlayer.min.js"></script>
-<script src="/libs/aplayer/Meting.min.js"></script>
-
-    
 
     <div class="container row center-align"
          style="margin-bottom: 0px !important;">
@@ -763,8 +724,6 @@
             
             
             
-                
-            
             
 
             </span>
@@ -774,7 +733,7 @@
             <br>
             
         </div>
-        <div class="col s12 m4 l4 social-link social-statis">
+        <div class="col s12 m4 l4 social-link ">
 
 
 
@@ -956,8 +915,6 @@ $(function () {
     
     <script src="/libs/others/clicklove.js" async="async"></script>
     
-    
-    <script async src="/libs/others/busuanzi.pure.mini.js"></script>
     
 
     

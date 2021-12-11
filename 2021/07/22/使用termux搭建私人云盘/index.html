@@ -4,7 +4,7 @@
 
 <head>
     <!-- hexo-inject:begin --><!-- hexo-inject:end --><meta charset="utf-8">
-    <meta name="keywords" content="使用termux搭建私人云盘, 0nnn">
+    <meta name="keywords" content="termux,kod,搭建,私人云盘,网盘,私人网盘,服务器,安卓终端">
     <meta name="description" content="网盘方便了人们的办公和娱乐，成了我们日常必不可少的，现在网络上的很多网盘，诸如百度网盘、蓝奏网盘等。不过，这些网盘都有这样那样的限制，也有着一些必须的费用，有的时候，拥有一个自己的私人云盘会方便很多，本篇博客讲述利用termux在闲置的旧手">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
@@ -177,6 +177,19 @@
 </header>
 
     
+<script src="/libs/cryptojs/crypto-js.min.js"></script>
+<script>
+    (function() {
+        let pwd = '';
+        if (pwd && pwd.length > 0) {
+            if (pwd !== CryptoJS.SHA256(prompt('请输入访问本文章的密码')).toString(CryptoJS.enc.Hex)) {
+                alert('密码错误，将返回主页！');
+                location.href = '/';
+            }
+        }
+    })();
+</script>
+
 
 
 
@@ -301,8 +314,20 @@
                     
                     <div class="article-tag">
                         
+                            <a href="/tags/%E6%95%99%E7%A8%8B/">
+                                <span class="chip bg-color">教程</span>
+                            </a>
+                        
+                            <a href="/tags/%E6%9C%8D%E5%8A%A1%E5%99%A8/">
+                                <span class="chip bg-color">服务器</span>
+                            </a>
+                        
                             <a href="/tags/termux/">
                                 <span class="chip bg-color">termux</span>
+                            </a>
+                        
+                            <a href="/tags/kod/">
+                                <span class="chip bg-color">kod</span>
                             </a>
                         
                     </div>
@@ -346,7 +371,7 @@
 <h1 id="配置需求"><a href="#配置需求" class="headerlink" title="配置需求"></a>配置需求</h1><p>一台Android 7.0及以上的手机 和一个支持ipv6的网络环境。（可以点击<a target="_blank" rel="noopener" href="http://test-ipv6.com/">http://test-ipv6.com</a>测试一下）</p>
 <h1 id="初识termux"><a href="#初识termux" class="headerlink" title="初识termux"></a>初识termux</h1><p>  termux是在Android上开源的一个终端模拟器应用，比较完整地还原了Linux环境。在root越来越难的今天，termux支持使用proot来代替root，并且可以用proot做容器安装完整的linux系统。官方提供了pkg的软件管理包，日后可以安装Python nginx mysql等应用。</p>
 <h1 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h1><h2 id="换源"><a href="#换源" class="headerlink" title="换源"></a>换源</h2><p>  termux的官方软件仓库在中国访问或下载速度很慢，所以换一个靠谱的国内镜像源是一件每个linux用户都会做的事情<br>  早期的termux只能通过修改配置文件来换源，不过现在有了官方的图像界面实现半自动化换源。<br><code>termux-change-repo</code><br><img src="https://i.loli.net/2021/08/18/eRXJIgGisnf9EF7.jpg" ><br>然后使用空格键选择所以后回车，<br><img src="https://i.loli.net/2021/08/18/lpUruOnixyItqhm.jpg" ><br>来到仓库选择界面选择tuna的镜像后回车，termux就会帮你自动替换成tuna的镜像源<br>  <del>需要注意的是，切换为镜像源后pkg search功能似乎无法正常使用（会列出所有的包）</del> </p>
-<h2 id="安装一些必须的软件"><a href="#安装一些必须的软件" class="headerlink" title="安装一些必须的软件"></a>安装一些必须的软件</h2><p>  如果你只是想要搭建一个私人网盘的话 那么<br>  <pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">pkg install wget php-fpm nginx curl git mariadb  -y<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><br>  如果你想要深入了解termux的话，这里推荐访问<a target="_blank" rel="noopener" href="https://www.sqlsec.com/2018/05/termux.html">国光老师的博客</a> </p>
+<h2 id="安装一些必须的软件"><a href="#安装一些必须的软件" class="headerlink" title="安装一些必须的软件"></a>安装一些必须的软件</h2><p>  如果你只是想要搭建一个私人网盘的话 那么<br>  <pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">pkg <span class="token function">install</span> <span class="token function">wget</span> php-fpm nginx <span class="token function">curl</span> <span class="token function">git</span> mariadb  -y<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><br>  如果你想要深入了解termux的话，这里推荐访问<a target="_blank" rel="noopener" href="https://www.sqlsec.com/2018/05/termux.html">国光老师的博客</a> </p>
 <h1 id="正式上路"><a href="#正式上路" class="headerlink" title="正式上路"></a>正式上路</h1><h2 id="下载kod"><a href="#下载kod" class="headerlink" title="下载kod"></a>下载kod</h2><p>创建一个文件夹 <code>mkdir kod &amp;&amp; cd kod</code> ，<br><img src="https://i.loli.net/2021/09/05/REuMxkAUTcqXirB.jpg" ><br>打开<a target="_blank" rel="noopener" href="https://kodcloud.com/download/">https://kodcloud.com/download/</a>，复制其中的Linux命令行安装中的指令，直接执行即可。</p>
 <h2 id="配置nginx"><a href="#配置nginx" class="headerlink" title="配置nginx"></a>配置nginx</h2><p>解压完成之后 候我们要将nginx的根目录改为kod所在的目录，使用<code>vim $PREFIX/etc/nginx/nginx.conf</code>修改nginx的配置文件<br>这里令提一点，vim的使用有些复杂，如果你不会使用的话，建议先经过一定的学习<a target="_blank" rel="noopener" href="https://m.runoob.com/linux/linux-vim.html">https://m.runoob.com/linux/linux-vim.html</a>后再继续观看本教程<br>言归正传，我们找到root，将后面的地址改为<code>~/kod</code><br>然后找到index，在后面添加上<code> index.php</code>,<br>找到带着注释的<code>location ~\.php$&#123;</code>在上一行重开一行，添加  </p>
 <pre class="line-numbers language-conf" data-language="conf"><code class="language-conf">location ~ \.php$ &#123;
@@ -368,7 +393,7 @@
 <span class="token keyword">set</span> password <span class="token keyword">for</span> <span class="token string">'root'</span><span class="token variable">@'localhost'</span> <span class="token operator">=</span> password<span class="token punctuation">(</span><span class="token string">'password'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>  <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
 <p>当然，你也可以将password替换为其他密码<br>设置你的root用户密码，使用ctrl + d退出，日后可以用<code>mysql -u root -ppassword</code>登录  </p>
 <h1 id="配置-kod"><a href="#配置-kod" class="headerlink" title="配置 kod"></a>配置 kod</h1><p>一切准备就绪，现在用ctrl+d退出termux,重新打开，输入  </p>
-<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">nohup mysqld &amp; 
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">nohup</span> mysqld <span class="token operator">&amp;</span> 
 php-fpm
 nginx
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
@@ -377,9 +402,9 @@ nginx
 <h1 id="完善工作"><a href="#完善工作" class="headerlink" title="完善工作"></a>完善工作</h1><h2 id="创建公共目录的软连接"><a href="#创建公共目录的软连接" class="headerlink" title="创建公共目录的软连接"></a>创建公共目录的软连接</h2><p>kod必须安装在termux的私有目录，这就导致一些文件的访问等非常不方便，不过我们仍然可以通过创建软连接的方式将目录重新定向到公有目录<br>首先输入<code>termux-setup-storage</code>获取公有目录访问权限，然后进入kod的目录，这时候  </p>
 <h4 id="1-访问整个sdcard目录"><a href="#1-访问整个sdcard目录" class="headerlink" title="1.访问整个sdcard目录"></a>1.访问整个sdcard目录</h4><p>进入files目录，使用<code>ln -s /sdcard myfiles</code>创建软连接  </p>
 <h4 id="2-访问部分文件"><a href="#2-访问部分文件" class="headerlink" title="2.访问部分文件"></a>2.访问部分文件</h4><p>这里以创建myfiles举例  </p>
-<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">cd files
-mkdir &#x2F;sdcard&#x2F;myfiles
-ln -s &#x2F;sdcard&#x2F;myfiles myfiles<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token builtin class-name">cd</span> files
+<span class="token function">mkdir</span> /sdcard/myfiles
+<span class="token function">ln</span> -s /sdcard/myfiles myfiles<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
 <hr>
 <p>全部完成之后，登录kod，打开网络管理中本地磁盘/myfiles 就可以看到公有目录了</p>
 <h2 id="绑定域名"><a href="#绑定域名" class="headerlink" title="绑定域名"></a>绑定域名</h2><p>众所周知，ipv6地址是128位的，睡愿意去访问一个又臭又长的纯ipv6地址呢?所有，有一个域名是会方便很多。</p>
@@ -387,11 +412,11 @@ ln -s &#x2F;sdcard&#x2F;myfiles myfiles<span aria-hidden="true" class="line-numb
 <h4 id="移交至Cloudflare管理"><a href="#移交至Cloudflare管理" class="headerlink" title="移交至Cloudflare管理"></a>移交至Cloudflare管理</h4><p>Cloudflare是世界上最大的dns服务商，也为网站提供了cdn服务，需要注意的是，如果你是在freenom中注册的域名的话，还是尽量移交至腾讯云管理这里同样不多赘述  </p>
 <h4 id="配置ddnsv6"><a href="#配置ddnsv6" class="headerlink" title="配置ddnsv6"></a>配置ddnsv6</h4><p>我们的dns地址不是永远不变的，网络的变更和租约的到期都会导致ipv6地址的变更，所以我们要配置ddnsv6获取动态域名解析  </p>
 <h6 id="1-安装ubuntu"><a href="#1-安装ubuntu" class="headerlink" title="1.安装ubuntu"></a>1.安装ubuntu</h6><p>配置ddnsv6最简单的方法就是安装ddns-go,但ddns-go不可以直接安装在termux中，所以要先安装一个ubuntu系统  </p>
-<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">pkg update -y 
-pkg install curl proot tar -y 
-curl https:&#x2F;&#x2F;raw.githubusercontent.com&#x2F;AndronixApp&#x2F;AndronixOrigin&#x2F;master&#x2F;Installer&#x2F;Ubuntu20&#x2F;ubuntu20.sh | bash<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">pkg update -y 
+pkg <span class="token function">install</span> <span class="token function">curl</span> proot <span class="token function">tar</span> -y 
+<span class="token function">curl</span> https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Installer/Ubuntu20/ubuntu20.sh <span class="token operator">|</span> <span class="token function">bash</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
 <p>在合适的网络环境下，上面的一串指令会帮助我们自动安装Andronix提供的ubuntu系统，回到主目录，输入</p>
-<pre class="line-numbers language-shell" data-language="shell"><code class="language-shell">bash start-ubuntu20.sh<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">bash</span> start-ubuntu20.sh<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <p>就可以进入ubuntu系统<del>(如果你乐意的话不妨把之前的一些东西全部转移到ubuntu上)</del>，退出的话使用exit命令即可<br>在termux中，输入<code>vim start-ubuntu20.sh</code>修改启动文件。找到sdcard一行，删掉前面的#号</p>
 <h6 id="2-安装ddns-go"><a href="#2-安装ddns-go" class="headerlink" title="2.安装ddns-go"></a>2.安装ddns-go</h6><p>我们打开ddns-go的<a target="_blank" rel="noopener" href="https://github.com/jeessy2/ddns-go/releases">github</a>，点击Assets，选择arm64的Linux版本并下载解压，随后进入ubuntu系统，将解压后的ddns-go文件复制到bin文件夹并使用<code>chmod +x ddns-go</code>赋予之下权，之后输入<code>./ddns-go</code>打开  </p>
 <h6 id="3-配置ddns-go"><a href="#3-配置ddns-go" class="headerlink" title="3.配置ddns-go"></a>3.配置ddns-go</h6><p>打开ddns-go后，我们在浏览器中打开<a target="_blank" rel="noopener" href="http://127.0.0.1:9876/">http://127.0.0.1:9876</a>来配置ddns-go,配置页是默认中午的，且有教程，这里不多赘述。配置好后点击save保存，之后回到termux,从左上角向右话动，点击new session新建一个窗口，在新建窗口中打开服务器</p>
@@ -460,8 +485,20 @@ curl https:&#x2F;&#x2F;raw.githubusercontent.com&#x2F;AndronixApp&#x2F;AndronixO
                     
                         <div class="article-tag">
                             
+                                <a href="/tags/%E6%95%99%E7%A8%8B/">
+                                    <span class="chip bg-color">教程</span>
+                                </a>
+                            
+                                <a href="/tags/%E6%9C%8D%E5%8A%A1%E5%99%A8/">
+                                    <span class="chip bg-color">服务器</span>
+                                </a>
+                            
                                 <a href="/tags/termux/">
                                     <span class="chip bg-color">termux</span>
+                                </a>
+                            
+                                <a href="/tags/kod/">
+                                    <span class="chip bg-color">kod</span>
                                 </a>
                             
                         </div>
@@ -590,8 +627,20 @@ curl https:&#x2F;&#x2F;raw.githubusercontent.com&#x2F;AndronixApp&#x2F;AndronixO
                 
                 <div class="card-action article-tags">
                     
+                    <a href="/tags/%E6%95%99%E7%A8%8B/">
+                        <span class="chip bg-color">教程</span>
+                    </a>
+                    
+                    <a href="/tags/%E6%9C%8D%E5%8A%A1%E5%99%A8/">
+                        <span class="chip bg-color">服务器</span>
+                    </a>
+                    
                     <a href="/tags/termux/">
                         <span class="chip bg-color">termux</span>
+                    </a>
+                    
+                    <a href="/tags/kod/">
+                        <span class="chip bg-color">kod</span>
                     </a>
                     
                 </div>
@@ -727,60 +776,6 @@ curl https:&#x2F;&#x2F;raw.githubusercontent.com&#x2F;AndronixApp&#x2F;AndronixO
 
     <footer class="page-footer bg-color">
     
-        <link rel="stylesheet" href="/libs/aplayer/APlayer.min.css">
-<style>
-    .aplayer .aplayer-lrc p {
-        
-        display: none;
-        
-        font-size: 12px;
-        font-weight: 700;
-        line-height: 16px !important;
-    }
-
-    .aplayer .aplayer-lrc p.aplayer-lrc-current {
-        
-        display: none;
-        
-        font-size: 15px;
-        color: #42b983;
-    }
-
-    
-    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body {
-        left: -66px !important;
-    }
-
-    .aplayer.aplayer-fixed.aplayer-narrow .aplayer-body:hover {
-        left: 0px !important;
-    }
-
-    
-</style>
-<div class="">
-    
-    <div class="row">
-        <meting-js class="col l8 offset-l2 m10 offset-m1 s12"
-                   server="netease"
-                   type="playlist"
-                   id="503838841"
-                   fixed='true'
-                   autoplay='false'
-                   theme='#42b983'
-                   loop='all'
-                   order='random'
-                   preload='auto'
-                   volume='0.7'
-                   list-folded='true'
-        >
-        </meting-js>
-    </div>
-</div>
-
-<script src="/libs/aplayer/APlayer.min.js"></script>
-<script src="/libs/aplayer/Meting.min.js"></script>
-
-    
 
     <div class="container row center-align"
          style="margin-bottom: 0px !important;">
@@ -796,8 +791,6 @@ curl https:&#x2F;&#x2F;raw.githubusercontent.com&#x2F;AndronixApp&#x2F;AndronixO
             
             
             
-                
-            
             
 
             </span>
@@ -807,7 +800,7 @@ curl https:&#x2F;&#x2F;raw.githubusercontent.com&#x2F;AndronixApp&#x2F;AndronixO
             <br>
             
         </div>
-        <div class="col s12 m4 l4 social-link social-statis">
+        <div class="col s12 m4 l4 social-link ">
 
 
 
@@ -989,8 +982,6 @@ $(function () {
     
     <script src="/libs/others/clicklove.js" async="async"></script>
     
-    
-    <script async src="/libs/others/busuanzi.pure.mini.js"></script>
     
 
     
