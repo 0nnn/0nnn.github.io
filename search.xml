@@ -15,6 +15,94 @@
       </tags>
   </entry>
   <entry>
+    <title>使用termux搭建私人云盘</title>
+    <url>/2021/07/22/%E4%BD%BF%E7%94%A8termux%E6%90%AD%E5%BB%BA%E7%A7%81%E4%BA%BA%E4%BA%91%E7%9B%98/</url>
+    <content><![CDATA[<p>网盘方便了人们的办公和娱乐，成了我们日常必不可少的，现在网络上的很多网盘，诸如百度网盘、蓝奏网盘等。不过，这些网盘都有这样那样的限制，也有着一些必须的费用，有的时候，拥有一个自己的私人云盘会方便很多，本篇博客讲述利用termux在闲置的旧手机上搭建私人云盘</p>
+<span id="more"></span>
+<h1 id="配置需求"><a href="#配置需求" class="headerlink" title="配置需求"></a>配置需求</h1><p>一台Android 7.0及以上的手机 和一个支持ipv6的网络环境。（可以点击<a href="http://test-ipv6.com/">http://test-ipv6.com</a>测试一下）</p>
+<h1 id="初识termux"><a href="#初识termux" class="headerlink" title="初识termux"></a>初识termux</h1><p>  termux是在Android上开源的一个终端模拟器应用，比较完整地还原了Linux环境。在root越来越难的今天，termux支持使用proot来代替root，并且可以用proot做容器安装完整的linux系统。官方提供了pkg的软件管理包，日后可以安装Python nginx mysql等应用。</p>
+<h1 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h1><h2 id="换源"><a href="#换源" class="headerlink" title="换源"></a>换源</h2><p>  termux的官方软件仓库在中国访问或下载速度很慢，所以换一个靠谱的国内镜像源是一件每个linux用户都会做的事情<br>  早期的termux只能通过修改配置文件来换源，不过现在有了官方的图像界面实现半自动化换源。<br><code>termux-change-repo</code><br><img src="https://i.loli.net/2021/08/18/eRXJIgGisnf9EF7.jpg" ><br>然后使用空格键选择所以后回车，<br><img src="https://i.loli.net/2021/08/18/lpUruOnixyItqhm.jpg" ><br>来到仓库选择界面选择tuna的镜像后回车，termux就会帮你自动替换成tuna的镜像源<br>  <del>需要注意的是，切换为镜像源后pkg search功能似乎无法正常使用（会列出所有的包）</del> </p>
+<h2 id="安装一些必须的软件"><a href="#安装一些必须的软件" class="headerlink" title="安装一些必须的软件"></a>安装一些必须的软件</h2><p>  如果你只是想要搭建一个私人网盘的话 那么<br>  <pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">pkg <span class="token function">install</span> <span class="token function">wget</span> php-fpm nginx <span class="token function">curl</span> <span class="token function">git</span> mariadb  -y<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><br>  如果你想要深入了解termux的话，这里推荐访问<a href="https://www.sqlsec.com/2018/05/termux.html">国光老师的博客</a> </p>
+<h1 id="正式上路"><a href="#正式上路" class="headerlink" title="正式上路"></a>正式上路</h1><h2 id="下载kod"><a href="#下载kod" class="headerlink" title="下载kod"></a>下载kod</h2><p>创建一个文件夹 <code>mkdir kod &amp;&amp; cd kod</code> ，<br><img src="https://i.loli.net/2021/09/05/REuMxkAUTcqXirB.jpg" ><br>打开<a href="https://kodcloud.com/download/">https://kodcloud.com/download/</a>，复制其中的Linux命令行安装中的指令，直接执行即可。</p>
+<h2 id="配置nginx"><a href="#配置nginx" class="headerlink" title="配置nginx"></a>配置nginx</h2><p>解压完成之后 候我们要将nginx的根目录改为kod所在的目录，使用<code>vim $PREFIX/etc/nginx/nginx.conf</code>修改nginx的配置文件<br>这里令提一点，vim的使用有些复杂，如果你不会使用的话，建议先经过一定的学习<a href="https://m.runoob.com/linux/linux-vim.html">https://m.runoob.com/linux/linux-vim.html</a>后再继续观看本教程<br>言归正传，我们找到root，将后面的地址改为<code>~/kod</code><br>然后找到index，在后面添加上<code> index.php</code>,<br>找到带着注释的<code>location ~\.php$&#123;</code>在上一行重开一行，添加  </p>
+<pre class="line-numbers language-conf" data-language="conf"><code class="language-conf">location ~ \.php$ &#123;
+     root           html;
+     fastcgi_pass   127.0.0.1:9000;
+     fastcgi_index  index.php;
+     fastcgi_param  SCRIPT_FILENAME  ~&#x2F;kod$fastcgi_script_name;
+      include        fastcgi_params;
+&#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>找到listen<br>在后面开一行添加  </p>
+<pre class="line-numbers language-conf" data-language="conf"><code class="language-conf">listen [::]:8080<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>然后保存退出</p>
+<h2 id="解析php"><a href="#解析php" class="headerlink" title="解析php"></a>解析php</h2><p>kod调用最多的是php，所以nginx能够解析php是非常重要的，不过nginx本身不能解析php,所以要放到后端的php-fpm来处理<br>使用<code>vim $PREFIX/etc/php-fpm.d/www.conf</code>修改php-fpm的配置  </p>
+<pre class="line-numbers language-conf" data-language="conf"><code class="language-conf">listen &#x3D; &#x2F;data&#x2F;data&#x2F;com.termux&#x2F;files&#x2F;usr&#x2F;var&#x2F;run&#x2F;php-fpm.sock<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+
+<p>改为<br><code>listen = 127.0.0.1:9000</code><br>保存退出<br>这个时候，你已经完成了一半了，然后输入<code>php-fpm &amp;&amp; nginx</code>运行nginx, 随后在浏览器中打开<a href="http://localhost:8080/">http://localhost:8080</a>,如果没有nginx或php报错的话，服务器算是配置完成了，接下来就需要为kod搭建数据库了</p>
+<h2 id="搭建mysql"><a href="#搭建mysql" class="headerlink" title="搭建mysql"></a>搭建mysql</h2><p>首先输入<code>nohup mysqld &amp;</code>启动mysql ,并将其挂到后台，,输入 <code>whoami</code>获取当前用户，然后输入<code>mysql -u 用户名</code>登入mysql 然后输入  </p>
+<pre class="line-numbers language-sql" data-language="sql"><code class="language-sql"><span class="token keyword">use</span> mysql<span class="token punctuation">;</span>
+<span class="token keyword">set</span> password <span class="token keyword">for</span> <span class="token string">'root'</span><span class="token variable">@'localhost'</span> <span class="token operator">=</span> password<span class="token punctuation">(</span><span class="token string">'password'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>  <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>当然，你也可以将password替换为其他密码<br>设置你的root用户密码，使用ctrl + d退出，日后可以用<code>mysql -u root -ppassword</code>登录  </p>
+<h1 id="配置-kod"><a href="#配置-kod" class="headerlink" title="配置 kod"></a>配置 kod</h1><p>一切准备就绪，现在用ctrl+d退出termux,重新打开，输入  </p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">nohup</span> mysqld <span class="token operator">&amp;</span> 
+php-fpm
+nginx
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p>然后在浏览器中打开127.0.0.1:8080进入安装引导<br><img src="https://i.loli.net/2021/09/05/AaGy9KWH7vi3SpB.jpg" ><br>点击下一步<br><img src="https://i.loli.net/2021/09/05/K7cklfvb6SDZa4j.jpg" ><br>数据库类型选择mysql,密码填写password或者你自定义的密码<br><img src="https://i.loli.net/2021/09/05/iyx9kMdw2F3Jtsu.jpg" ><br>填写用于登录的账号和密码，这是超级管理员的账号和密码<br><img src="https://i.loli.net/2021/09/05/V45fc1Hm7iLrAGN.jpg" ><br>输入刚才的账号密码访问<br>登陆后是这个样子<br><img src="https://i.loli.net/2021/09/05/yMwuxN5fDsPE6RL.jpg" ></p>
+<h1 id="测试访问"><a href="#测试访问" class="headerlink" title="测试访问"></a>测试访问</h1><p>  这个时候，kod的基本工作已经完成了，之后通过<a href="https://api-ipv6.ip.sb/ip">https://api-ipv6.ip.sb/ip</a>获取你的ipv6地址，接着用<a href="http://[你获取的地址]:8080">http://[你获取的地址]:8080</a>访问。<del>如果实在不放心，也可以将它发给你的好基/姬友帮忙测试一下</del>  </p>
+<h1 id="完善工作"><a href="#完善工作" class="headerlink" title="完善工作"></a>完善工作</h1><h2 id="创建公共目录的软连接"><a href="#创建公共目录的软连接" class="headerlink" title="创建公共目录的软连接"></a>创建公共目录的软连接</h2><p>kod必须安装在termux的私有目录，这就导致一些文件的访问等非常不方便，不过我们仍然可以通过创建软连接的方式将目录重新定向到公有目录<br>首先输入<code>termux-setup-storage</code>获取公有目录访问权限，然后进入kod的目录，这时候  </p>
+<h4 id="1-访问整个sdcard目录"><a href="#1-访问整个sdcard目录" class="headerlink" title="1.访问整个sdcard目录"></a>1.访问整个sdcard目录</h4><p>进入files目录，使用<code>ln -s /sdcard myfiles</code>创建软连接  </p>
+<h4 id="2-访问部分文件"><a href="#2-访问部分文件" class="headerlink" title="2.访问部分文件"></a>2.访问部分文件</h4><p>这里以创建myfiles举例  </p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token builtin class-name">cd</span> files
+<span class="token function">mkdir</span> /sdcard/myfiles
+<span class="token function">ln</span> -s /sdcard/myfiles myfiles<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<hr>
+<p>全部完成之后，登录kod，打开网络管理中本地磁盘/myfiles 就可以看到公有目录了</p>
+<h2 id="绑定域名"><a href="#绑定域名" class="headerlink" title="绑定域名"></a>绑定域名</h2><p>众所周知，ipv6地址是128位的，睡愿意去访问一个又臭又长的纯ipv6地址呢?所有，有一个域名是会方便很多。</p>
+<h4 id="注册一个域名"><a href="#注册一个域名" class="headerlink" title="注册一个域名"></a>注册一个域名</h4><p>没有域名的话我们可以去<a href="https://www.freenom.com/">https://www.freenom.com</a>去注册一个免费的，不过只能注册一些不常见的后缀。相比之下，我更推荐去购买一个top或xyz的域名。这里就不多赘述  </p>
+<h4 id="移交至Cloudflare管理"><a href="#移交至Cloudflare管理" class="headerlink" title="移交至Cloudflare管理"></a>移交至Cloudflare管理</h4><p>Cloudflare是世界上最大的dns服务商，也为网站提供了cdn服务，需要注意的是，如果你是在freenom中注册的域名的话，还是尽量移交至腾讯云管理这里同样不多赘述  </p>
+<h4 id="配置ddnsv6"><a href="#配置ddnsv6" class="headerlink" title="配置ddnsv6"></a>配置ddnsv6</h4><p>我们的dns地址不是永远不变的，网络的变更和租约的到期都会导致ipv6地址的变更，所以我们要配置ddnsv6获取动态域名解析  </p>
+<h6 id="1-安装ubuntu"><a href="#1-安装ubuntu" class="headerlink" title="1.安装ubuntu"></a>1.安装ubuntu</h6><p>配置ddnsv6最简单的方法就是安装ddns-go,但ddns-go不可以直接安装在termux中，所以要先安装一个ubuntu系统  </p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">pkg update -y 
+pkg <span class="token function">install</span> <span class="token function">curl</span> proot <span class="token function">tar</span> -y 
+<span class="token function">curl</span> https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Installer/Ubuntu20/ubuntu20.sh <span class="token operator">|</span> <span class="token function">bash</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p>在合适的网络环境下，上面的一串指令会帮助我们自动安装Andronix提供的ubuntu系统，回到主目录，输入</p>
+<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">bash</span> start-ubuntu20.sh<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>就可以进入ubuntu系统<del>(如果你乐意的话不妨把之前的一些东西全部转移到ubuntu上)</del>，退出的话使用exit命令即可<br>在termux中，输入<code>vim start-ubuntu20.sh</code>修改启动文件。找到sdcard一行，删掉前面的#号</p>
+<h6 id="2-安装ddns-go"><a href="#2-安装ddns-go" class="headerlink" title="2.安装ddns-go"></a>2.安装ddns-go</h6><p>我们打开ddns-go的<a href="https://github.com/jeessy2/ddns-go/releases">github</a>，点击Assets，选择arm64的Linux版本并下载解压，随后进入ubuntu系统，将解压后的ddns-go文件复制到bin文件夹并使用<code>chmod +x ddns-go</code>赋予之下权，之后输入<code>./ddns-go</code>打开  </p>
+<h6 id="3-配置ddns-go"><a href="#3-配置ddns-go" class="headerlink" title="3.配置ddns-go"></a>3.配置ddns-go</h6><p>打开ddns-go后，我们在浏览器中打开<a href="http://127.0.0.1:9876/">http://127.0.0.1:9876</a>来配置ddns-go,配置页是默认中午的，且有教程，这里不多赘述。配置好后点击save保存，之后回到termux,从左上角向右话动，点击new session新建一个窗口，在新建窗口中打开服务器</p>
+<h6 id="4-ipv4访问"><a href="#4-ipv4访问" class="headerlink" title="4.ipv4访问"></a>4.ipv4访问</h6><p>我们的服务器是在ipv6上搭建的，所以只有支持ipv6的设备才能使用，但由于ipv6的建设并没有ipv4完善，所以有时会用到ipv4去访问<br>打开Cloudflare,在dns界面新建一个三级域名，选择已代理(默认就是)，这样会让Cloudflare去反向代理你的服务器，会牺牲一定的访问速度(下载速度感知不大,貌似付费域名域名会快很多)，换取ipv4/ipv6的双缆访问<br>不过，由于cdn你会和很多网站公用一个ip地址，ip地址被封禁也是有可能的。  </p>
+]]></content>
+      <tags>
+        <tag>termux</tag>
+        <tag>教程</tag>
+        <tag>kod</tag>
+        <tag>服务器</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>国内Gmail的的情况怎样</title>
+    <url>/2021/11/10/%E5%85%B3%E4%BA%8E%E5%9B%BD%E5%86%85%E4%BD%BF%E7%94%A8Gmail%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B/</url>
+    <content><![CDATA[<p>Gmail是Google推出的一款免费的电子邮箱服务，与Google账号深度绑定，每个Google都会附带一个Gmail，是目前世界上最受欢迎的邮箱服务。自从Google退出中国以来，我本以为Gmail在大陆的使用不会太多，没想到在国内仍有不少人在使用Gmail，那么，Gmail在国内的使用体验如何呢?  </p>
+<span id="more"></span>  
+<p>首先说一点，中国大陆无法使用Gmail app，如果登录上的话ios手机可以接收消息推送，但是查看详细和主动发送邮件都不行。(得益于苹果的统一推送服务)。安卓版本不挂梯子是完全无法使用的。<br>相比于此，中国大陆仍有很好的解决方案  </p>
+<h1 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h1><h3 id="1-只是用Gmail接收邮件，不主动发送邮件。"><a href="#1-只是用Gmail接收邮件，不主动发送邮件。" class="headerlink" title="1.只是用Gmail接收邮件，不主动发送邮件。"></a>1.只是用Gmail接收邮件，不主动发送邮件。</h3><p>这类情况再国外游戏玩家中比较常见，只是用Gmail接收个验证码注册个账号啥的，可以选择使用转发服务。<br>转发的原理其实就是当Gmail收到邮件后，邮件会被Gmail转发一封邮件到你绑定的账号上，万幸的是中国没有对Gmail完全封锁，我们在国内仍能接收到来自Gmail的邮件。</p>
+<h5 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h5><p>首先，打开<a href="https://mail.google.com/">Gmail</a> <del>(这不废话吗)</del> ，登录好账号之后，(移动版可能需要切换为桌面版)在设置中找到”转发和POP/IMAP”，选择转发一栏，在其中找到”添加转发地址”，添加你常用的国内邮箱就好。</p>
+<h3 id="2-使用Gmail有发送的要求，但不涉及商业。"><a href="#2-使用Gmail有发送的要求，但不涉及商业。" class="headerlink" title="2.使用Gmail有发送的要求，但不涉及商业。"></a>2.使用Gmail有发送的要求，但不涉及商业。</h3><h5 id="QQ邮箱"><a href="#QQ邮箱" class="headerlink" title="QQ邮箱"></a>QQ邮箱</h5><p>qq邮箱算是腾讯旗下十分良心的产品了，不仅完全免费使用，而且广告不多，甚至还罕见的接入了mipush，可谓是良心软件。<br>打开qq邮箱后直接选择gmail便可以直接跳转到google账号登录页面，全过程在中国大陆内即可完成。目测应该是腾讯搭建了一个国际联网的反向代理(因为google显示的登录地址便是国内的)。  </p>
+<hr>
+<h5 id="小米邮箱"><a href="#小米邮箱" class="headerlink" title="小米邮箱"></a>小米邮箱</h5><p>小米邮箱就是小米自带的邮箱，由于google的限制，登录第三方邮箱客户端需要获得google的网页授权，所以传统的账号密码登录无法使用，在账号上输入以”@gmail.com”结尾的邮箱也会跳转到google的授权页面。<br>与qq邮箱不同的是，小米邮箱没有搭建代理，所以登录界面需要自己翻，之后便可以正常的使用gmail。<br>需要注意的是，小米邮箱中gmail的体验其实很差，有推送但完全不起作用，服务器也十有八九连不上，其实是不太油好的，但至少是裸网访问，个人信息不用过一遍其他公司的服务器。  </p>
+<hr>
+<p>其他第三方邮箱基本与qq邮箱相差不多，这里不举例了。</p>
+<h3 id="3-商业用途"><a href="#3-商业用途" class="headerlink" title="3.商业用途"></a>3.商业用途</h3><p>如果是商业用途的话，前两种方法就无法符合要求了，这时候，一般便是采取最原始的做法。  </p>
+<h5 id="1-使用虚拟专用网络"><a href="#1-使用虚拟专用网络" class="headerlink" title="1.使用虚拟专用网络"></a>1.使用虚拟专用网络</h5><p>虚拟专用网络(VPN)，是一种代理技术，一般被用于连接加速(各游戏加速器)与保护隐私(如samsung max)。使用vpn的好处很多，是中国网友突破限制的最佳选择，但如果面临使用流量过大很有可能被请喝茶。  </p>
+<h5 id="2-申请接入国际联网"><a href="#2-申请接入国际联网" class="headerlink" title="2.申请接入国际联网"></a>2.申请接入国际联网</h5><p>没错，国家官方是可以申请使用国际联网的，为了方便供教育和商业上的使用。具体可以参考<a href="http://www.zzdnn.com/cnet/masrncz.html">http://www.zzdnn.com/cnet/masrncz.html</a>。这一点上的好处，便是不用受到代理服务器的影响，带宽大，隐私性强，而且完全合法。缺点就是手续繁琐，申请周期长，资费贵的离谱，更适合有特定需求的公司使用。<br>说了这么多，整体来说Gmail在国内的使用体验还是很不错的，<del>毕竟搜索市占率6.7%嘛</del></p>
+]]></content>
+      <tags>
+        <tag>邮箱</tag>
+        <tag>Gmail</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>一月五元的vps却不会购买?hostvds详细教程</title>
     <url>/2021/12/11/%E4%B8%80%E6%9C%88%E4%BA%94%E5%85%83%E7%9A%84vps%E5%8D%B4%E4%B8%8D%E4%BC%9A%E8%B4%AD%E4%B9%B0-hostvds%E8%AF%A6%E7%BB%86%E6%95%99%E7%A8%8B/</url>
     <content><![CDATA[<p>相信大家都或多或少的了解过vps。对于个人用户而言，实体服务器的价格非常高，而vps就是个十分不错的选择。目前国内公网ip难寻，vps的价格非常高。相应的，国外也有一些十分便宜的vps或服务器。同时，也不必去备案，除了延迟比较高以外，简直就是建站的不二之选。</p>
@@ -98,97 +186,9 @@
 <p>接下来就是闲聊了。<br>话说这个hostvds的bug是真的多，用户体验也不好，对不怎么懂服务器的新手十分不友好，不过至少便宜啊。<br>要说起来我觉得不如先前推荐的euserv的免费vps，配置都差不多，就是少了个公网ipv4。但是像我这种做做网站的，随便套个cdn就能ipv4访问了，有时候是真的没必要。euserv不仅稳定，而且操作简单，就是有可能不过审，由于当时自己是一遍过的，所以没细讲。<br>其实不借助openstack的面板开服务器也行。不过需要了解一些curl基础。<br>买来服务器后不要忘了装个防火墙</p>
 ]]></content>
       <tags>
+        <tag>教程</tag>
+        <tag>服务器</tag>
         <tag>vps</tag>
-        <tag>教程</tag>
-        <tag>服务器</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>使用termux搭建私人云盘</title>
-    <url>/2021/07/22/%E4%BD%BF%E7%94%A8termux%E6%90%AD%E5%BB%BA%E7%A7%81%E4%BA%BA%E4%BA%91%E7%9B%98/</url>
-    <content><![CDATA[<p>网盘方便了人们的办公和娱乐，成了我们日常必不可少的，现在网络上的很多网盘，诸如百度网盘、蓝奏网盘等。不过，这些网盘都有这样那样的限制，也有着一些必须的费用，有的时候，拥有一个自己的私人云盘会方便很多，本篇博客讲述利用termux在闲置的旧手机上搭建私人云盘</p>
-<span id="more"></span>
-<h1 id="配置需求"><a href="#配置需求" class="headerlink" title="配置需求"></a>配置需求</h1><p>一台Android 7.0及以上的手机 和一个支持ipv6的网络环境。（可以点击<a href="http://test-ipv6.com/">http://test-ipv6.com</a>测试一下）</p>
-<h1 id="初识termux"><a href="#初识termux" class="headerlink" title="初识termux"></a>初识termux</h1><p>  termux是在Android上开源的一个终端模拟器应用，比较完整地还原了Linux环境。在root越来越难的今天，termux支持使用proot来代替root，并且可以用proot做容器安装完整的linux系统。官方提供了pkg的软件管理包，日后可以安装Python nginx mysql等应用。</p>
-<h1 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h1><h2 id="换源"><a href="#换源" class="headerlink" title="换源"></a>换源</h2><p>  termux的官方软件仓库在中国访问或下载速度很慢，所以换一个靠谱的国内镜像源是一件每个linux用户都会做的事情<br>  早期的termux只能通过修改配置文件来换源，不过现在有了官方的图像界面实现半自动化换源。<br><code>termux-change-repo</code><br><img src="https://i.loli.net/2021/08/18/eRXJIgGisnf9EF7.jpg" ><br>然后使用空格键选择所以后回车，<br><img src="https://i.loli.net/2021/08/18/lpUruOnixyItqhm.jpg" ><br>来到仓库选择界面选择tuna的镜像后回车，termux就会帮你自动替换成tuna的镜像源<br>  <del>需要注意的是，切换为镜像源后pkg search功能似乎无法正常使用（会列出所有的包）</del> </p>
-<h2 id="安装一些必须的软件"><a href="#安装一些必须的软件" class="headerlink" title="安装一些必须的软件"></a>安装一些必须的软件</h2><p>  如果你只是想要搭建一个私人网盘的话 那么<br>  <pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">pkg <span class="token function">install</span> <span class="token function">wget</span> php-fpm nginx <span class="token function">curl</span> <span class="token function">git</span> mariadb  -y<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre><br>  如果你想要深入了解termux的话，这里推荐访问<a href="https://www.sqlsec.com/2018/05/termux.html">国光老师的博客</a> </p>
-<h1 id="正式上路"><a href="#正式上路" class="headerlink" title="正式上路"></a>正式上路</h1><h2 id="下载kod"><a href="#下载kod" class="headerlink" title="下载kod"></a>下载kod</h2><p>创建一个文件夹 <code>mkdir kod &amp;&amp; cd kod</code> ，<br><img src="https://i.loli.net/2021/09/05/REuMxkAUTcqXirB.jpg" ><br>打开<a href="https://kodcloud.com/download/">https://kodcloud.com/download/</a>，复制其中的Linux命令行安装中的指令，直接执行即可。</p>
-<h2 id="配置nginx"><a href="#配置nginx" class="headerlink" title="配置nginx"></a>配置nginx</h2><p>解压完成之后 候我们要将nginx的根目录改为kod所在的目录，使用<code>vim $PREFIX/etc/nginx/nginx.conf</code>修改nginx的配置文件<br>这里令提一点，vim的使用有些复杂，如果你不会使用的话，建议先经过一定的学习<a href="https://m.runoob.com/linux/linux-vim.html">https://m.runoob.com/linux/linux-vim.html</a>后再继续观看本教程<br>言归正传，我们找到root，将后面的地址改为<code>~/kod</code><br>然后找到index，在后面添加上<code> index.php</code>,<br>找到带着注释的<code>location ~\.php$&#123;</code>在上一行重开一行，添加  </p>
-<pre class="line-numbers language-conf" data-language="conf"><code class="language-conf">location ~ \.php$ &#123;
-     root           html;
-     fastcgi_pass   127.0.0.1:9000;
-     fastcgi_index  index.php;
-     fastcgi_param  SCRIPT_FILENAME  ~&#x2F;kod$fastcgi_script_name;
-      include        fastcgi_params;
-&#125;<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>找到listen<br>在后面开一行添加  </p>
-<pre class="line-numbers language-conf" data-language="conf"><code class="language-conf">listen [::]:8080<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>然后保存退出</p>
-<h2 id="解析php"><a href="#解析php" class="headerlink" title="解析php"></a>解析php</h2><p>kod调用最多的是php，所以nginx能够解析php是非常重要的，不过nginx本身不能解析php,所以要放到后端的php-fpm来处理<br>使用<code>vim $PREFIX/etc/php-fpm.d/www.conf</code>修改php-fpm的配置  </p>
-<pre class="line-numbers language-conf" data-language="conf"><code class="language-conf">listen &#x3D; &#x2F;data&#x2F;data&#x2F;com.termux&#x2F;files&#x2F;usr&#x2F;var&#x2F;run&#x2F;php-fpm.sock<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-
-<p>改为<br><code>listen = 127.0.0.1:9000</code><br>保存退出<br>这个时候，你已经完成了一半了，然后输入<code>php-fpm &amp;&amp; nginx</code>运行nginx, 随后在浏览器中打开<a href="http://localhost:8080/">http://localhost:8080</a>,如果没有nginx或php报错的话，服务器算是配置完成了，接下来就需要为kod搭建数据库了</p>
-<h2 id="搭建mysql"><a href="#搭建mysql" class="headerlink" title="搭建mysql"></a>搭建mysql</h2><p>首先输入<code>nohup mysqld &amp;</code>启动mysql ,并将其挂到后台，,输入 <code>whoami</code>获取当前用户，然后输入<code>mysql -u 用户名</code>登入mysql 然后输入  </p>
-<pre class="line-numbers language-sql" data-language="sql"><code class="language-sql"><span class="token keyword">use</span> mysql<span class="token punctuation">;</span>
-<span class="token keyword">set</span> password <span class="token keyword">for</span> <span class="token string">'root'</span><span class="token variable">@'localhost'</span> <span class="token operator">=</span> password<span class="token punctuation">(</span><span class="token string">'password'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>  <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<p>当然，你也可以将password替换为其他密码<br>设置你的root用户密码，使用ctrl + d退出，日后可以用<code>mysql -u root -ppassword</code>登录  </p>
-<h1 id="配置-kod"><a href="#配置-kod" class="headerlink" title="配置 kod"></a>配置 kod</h1><p>一切准备就绪，现在用ctrl+d退出termux,重新打开，输入  </p>
-<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">nohup</span> mysqld <span class="token operator">&amp;</span> 
-php-fpm
-nginx
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
-<p>然后在浏览器中打开127.0.0.1:8080进入安装引导<br><img src="https://i.loli.net/2021/09/05/AaGy9KWH7vi3SpB.jpg" ><br>点击下一步<br><img src="https://i.loli.net/2021/09/05/K7cklfvb6SDZa4j.jpg" ><br>数据库类型选择mysql,密码填写password或者你自定义的密码<br><img src="https://i.loli.net/2021/09/05/iyx9kMdw2F3Jtsu.jpg" ><br>填写用于登录的账号和密码，这是超级管理员的账号和密码<br><img src="https://i.loli.net/2021/09/05/V45fc1Hm7iLrAGN.jpg" ><br>输入刚才的账号密码访问<br>登陆后是这个样子<br><img src="https://i.loli.net/2021/09/05/yMwuxN5fDsPE6RL.jpg" ></p>
-<h1 id="测试访问"><a href="#测试访问" class="headerlink" title="测试访问"></a>测试访问</h1><p>  这个时候，kod的基本工作已经完成了，之后通过<a href="https://api-ipv6.ip.sb/ip">https://api-ipv6.ip.sb/ip</a>获取你的ipv6地址，接着用<a href="http://[你获取的地址]:8080">http://[你获取的地址]:8080</a>访问。<del>如果实在不放心，也可以将它发给你的好基/姬友帮忙测试一下</del>  </p>
-<h1 id="完善工作"><a href="#完善工作" class="headerlink" title="完善工作"></a>完善工作</h1><h2 id="创建公共目录的软连接"><a href="#创建公共目录的软连接" class="headerlink" title="创建公共目录的软连接"></a>创建公共目录的软连接</h2><p>kod必须安装在termux的私有目录，这就导致一些文件的访问等非常不方便，不过我们仍然可以通过创建软连接的方式将目录重新定向到公有目录<br>首先输入<code>termux-setup-storage</code>获取公有目录访问权限，然后进入kod的目录，这时候  </p>
-<h4 id="1-访问整个sdcard目录"><a href="#1-访问整个sdcard目录" class="headerlink" title="1.访问整个sdcard目录"></a>1.访问整个sdcard目录</h4><p>进入files目录，使用<code>ln -s /sdcard myfiles</code>创建软连接  </p>
-<h4 id="2-访问部分文件"><a href="#2-访问部分文件" class="headerlink" title="2.访问部分文件"></a>2.访问部分文件</h4><p>这里以创建myfiles举例  </p>
-<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token builtin class-name">cd</span> files
-<span class="token function">mkdir</span> /sdcard/myfiles
-<span class="token function">ln</span> -s /sdcard/myfiles myfiles<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
-<hr>
-<p>全部完成之后，登录kod，打开网络管理中本地磁盘/myfiles 就可以看到公有目录了</p>
-<h2 id="绑定域名"><a href="#绑定域名" class="headerlink" title="绑定域名"></a>绑定域名</h2><p>众所周知，ipv6地址是128位的，睡愿意去访问一个又臭又长的纯ipv6地址呢?所有，有一个域名是会方便很多。</p>
-<h4 id="注册一个域名"><a href="#注册一个域名" class="headerlink" title="注册一个域名"></a>注册一个域名</h4><p>没有域名的话我们可以去<a href="https://www.freenom.com/">https://www.freenom.com</a>去注册一个免费的，不过只能注册一些不常见的后缀。相比之下，我更推荐去购买一个top或xyz的域名。这里就不多赘述  </p>
-<h4 id="移交至Cloudflare管理"><a href="#移交至Cloudflare管理" class="headerlink" title="移交至Cloudflare管理"></a>移交至Cloudflare管理</h4><p>Cloudflare是世界上最大的dns服务商，也为网站提供了cdn服务，需要注意的是，如果你是在freenom中注册的域名的话，还是尽量移交至腾讯云管理这里同样不多赘述  </p>
-<h4 id="配置ddnsv6"><a href="#配置ddnsv6" class="headerlink" title="配置ddnsv6"></a>配置ddnsv6</h4><p>我们的dns地址不是永远不变的，网络的变更和租约的到期都会导致ipv6地址的变更，所以我们要配置ddnsv6获取动态域名解析  </p>
-<h6 id="1-安装ubuntu"><a href="#1-安装ubuntu" class="headerlink" title="1.安装ubuntu"></a>1.安装ubuntu</h6><p>配置ddnsv6最简单的方法就是安装ddns-go,但ddns-go不可以直接安装在termux中，所以要先安装一个ubuntu系统  </p>
-<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash">pkg update -y 
-pkg <span class="token function">install</span> <span class="token function">curl</span> proot <span class="token function">tar</span> -y 
-<span class="token function">curl</span> https://raw.githubusercontent.com/AndronixApp/AndronixOrigin/master/Installer/Ubuntu20/ubuntu20.sh <span class="token operator">|</span> <span class="token function">bash</span><span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
-<p>在合适的网络环境下，上面的一串指令会帮助我们自动安装Andronix提供的ubuntu系统，回到主目录，输入</p>
-<pre class="line-numbers language-bash" data-language="bash"><code class="language-bash"><span class="token function">bash</span> start-ubuntu20.sh<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>就可以进入ubuntu系统<del>(如果你乐意的话不妨把之前的一些东西全部转移到ubuntu上)</del>，退出的话使用exit命令即可<br>在termux中，输入<code>vim start-ubuntu20.sh</code>修改启动文件。找到sdcard一行，删掉前面的#号</p>
-<h6 id="2-安装ddns-go"><a href="#2-安装ddns-go" class="headerlink" title="2.安装ddns-go"></a>2.安装ddns-go</h6><p>我们打开ddns-go的<a href="https://github.com/jeessy2/ddns-go/releases">github</a>，点击Assets，选择arm64的Linux版本并下载解压，随后进入ubuntu系统，将解压后的ddns-go文件复制到bin文件夹并使用<code>chmod +x ddns-go</code>赋予之下权，之后输入<code>./ddns-go</code>打开  </p>
-<h6 id="3-配置ddns-go"><a href="#3-配置ddns-go" class="headerlink" title="3.配置ddns-go"></a>3.配置ddns-go</h6><p>打开ddns-go后，我们在浏览器中打开<a href="http://127.0.0.1:9876/">http://127.0.0.1:9876</a>来配置ddns-go,配置页是默认中午的，且有教程，这里不多赘述。配置好后点击save保存，之后回到termux,从左上角向右话动，点击new session新建一个窗口，在新建窗口中打开服务器</p>
-<h6 id="4-ipv4访问"><a href="#4-ipv4访问" class="headerlink" title="4.ipv4访问"></a>4.ipv4访问</h6><p>我们的服务器是在ipv6上搭建的，所以只有支持ipv6的设备才能使用，但由于ipv6的建设并没有ipv4完善，所以有时会用到ipv4去访问<br>打开Cloudflare,在dns界面新建一个三级域名，选择已代理(默认就是)，这样会让Cloudflare去反向代理你的服务器，会牺牲一定的访问速度(下载速度感知不大,貌似付费域名域名会快很多)，换取ipv4/ipv6的双缆访问<br>不过，由于cdn你会和很多网站公用一个ip地址，ip地址被封禁也是有可能的。  </p>
-]]></content>
-      <tags>
-        <tag>教程</tag>
-        <tag>服务器</tag>
-        <tag>termux</tag>
-        <tag>kod</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>国内Gmail的的情况怎样</title>
-    <url>/2021/11/10/%E5%85%B3%E4%BA%8E%E5%9B%BD%E5%86%85%E4%BD%BF%E7%94%A8Gmail%E7%9A%84%E9%82%A3%E4%BA%9B%E4%BA%8B/</url>
-    <content><![CDATA[<p>Gmail是Google推出的一款免费的电子邮箱服务，与Google账号深度绑定，每个Google都会附带一个Gmail，是目前世界上最受欢迎的邮箱服务。自从Google退出中国以来，我本以为Gmail在大陆的使用不会太多，没想到在国内仍有不少人在使用Gmail，那么，Gmail在国内的使用体验如何呢?  </p>
-<span id="more"></span>  
-<p>首先说一点，中国大陆无法使用Gmail app，如果登录上的话ios手机可以接收消息推送，但是查看详细和主动发送邮件都不行。(得益于苹果的统一推送服务)。安卓版本不挂梯子是完全无法使用的。<br>相比于此，中国大陆仍有很好的解决方案  </p>
-<h1 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h1><h3 id="1-只是用Gmail接收邮件，不主动发送邮件。"><a href="#1-只是用Gmail接收邮件，不主动发送邮件。" class="headerlink" title="1.只是用Gmail接收邮件，不主动发送邮件。"></a>1.只是用Gmail接收邮件，不主动发送邮件。</h3><p>这类情况再国外游戏玩家中比较常见，只是用Gmail接收个验证码注册个账号啥的，可以选择使用转发服务。<br>转发的原理其实就是当Gmail收到邮件后，邮件会被Gmail转发一封邮件到你绑定的账号上，万幸的是中国没有对Gmail完全封锁，我们在国内仍能接收到来自Gmail的邮件。</p>
-<h5 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h5><p>首先，打开<a href="https://mail.google.com/">Gmail</a> <del>(这不废话吗)</del> ，登录好账号之后，(移动版可能需要切换为桌面版)在设置中找到”转发和POP/IMAP”，选择转发一栏，在其中找到”添加转发地址”，添加你常用的国内邮箱就好。</p>
-<h3 id="2-使用Gmail有发送的要求，但不涉及商业。"><a href="#2-使用Gmail有发送的要求，但不涉及商业。" class="headerlink" title="2.使用Gmail有发送的要求，但不涉及商业。"></a>2.使用Gmail有发送的要求，但不涉及商业。</h3><h5 id="QQ邮箱"><a href="#QQ邮箱" class="headerlink" title="QQ邮箱"></a>QQ邮箱</h5><p>qq邮箱算是腾讯旗下十分良心的产品了，不仅完全免费使用，而且广告不多，甚至还罕见的接入了mipush，可谓是良心软件。<br>打开qq邮箱后直接选择gmail便可以直接跳转到google账号登录页面，全过程在中国大陆内即可完成。目测应该是腾讯搭建了一个国际联网的反向代理(因为google显示的登录地址便是国内的)。  </p>
-<hr>
-<h5 id="小米邮箱"><a href="#小米邮箱" class="headerlink" title="小米邮箱"></a>小米邮箱</h5><p>小米邮箱就是小米自带的邮箱，由于google的限制，登录第三方邮箱客户端需要获得google的网页授权，所以传统的账号密码登录无法使用，在账号上输入以”@gmail.com”结尾的邮箱也会跳转到google的授权页面。<br>与qq邮箱不同的是，小米邮箱没有搭建代理，所以登录界面需要自己翻，之后便可以正常的使用gmail。<br>需要注意的是，小米邮箱中gmail的体验其实很差，有推送但完全不起作用，服务器也十有八九连不上，其实是不太油好的，但至少是裸网访问，个人信息不用过一遍其他公司的服务器。  </p>
-<hr>
-<p>其他第三方邮箱基本与qq邮箱相差不多，这里不举例了。</p>
-<h3 id="3-商业用途"><a href="#3-商业用途" class="headerlink" title="3.商业用途"></a>3.商业用途</h3><p>如果是商业用途的话，前两种方法就无法符合要求了，这时候，一般便是采取最原始的做法。  </p>
-<h5 id="1-使用虚拟专用网络"><a href="#1-使用虚拟专用网络" class="headerlink" title="1.使用虚拟专用网络"></a>1.使用虚拟专用网络</h5><p>虚拟专用网络(VPN)，是一种代理技术，一般被用于连接加速(各游戏加速器)与保护隐私(如samsung max)。使用vpn的好处很多，是中国网友突破限制的最佳选择，但如果面临使用流量过大很有可能被请喝茶。  </p>
-<h5 id="2-申请接入国际联网"><a href="#2-申请接入国际联网" class="headerlink" title="2.申请接入国际联网"></a>2.申请接入国际联网</h5><p>没错，国家官方是可以申请使用国际联网的，为了方便供教育和商业上的使用。具体可以参考<a href="http://www.zzdnn.com/cnet/masrncz.html">http://www.zzdnn.com/cnet/masrncz.html</a>。这一点上的好处，便是不用受到代理服务器的影响，带宽大，隐私性强，而且完全合法。缺点就是手续繁琐，申请周期长，资费贵的离谱，更适合有特定需求的公司使用。<br>说了这么多，整体来说Gmail在国内的使用体验还是很不错的，<del>毕竟搜索市占率6.7%嘛</del></p>
-]]></content>
-      <tags>
-        <tag>邮箱</tag>
-        <tag>Gmail</tag>
       </tags>
   </entry>
   <entry>
